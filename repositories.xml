@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE repositories SYSTEM "https://www.gentoo.org/dtd/repositories.dtd">
+<repositories xmlns="" version="1.0">
+    <repo quality="experimental" status="unofficial">
+        <name><![CDATA[snc]]></name>
+        <description lang="en"><![CDATA[xrdp ebuilds]]></description>
+        <homepage>https://github.com/Serg-VL/xrdp-overlay</homepage>
+        <owner type="person">
+            <email>linniks@gmail.com</email>
+            <name><![CDATA[Serg-VL]]></name>
+        </owner>
+        <source type="git">git://github.com/Serg-VL/xrdp-overlay.git</source>
+        <source type="git">https://github.com/Serg-VL/xrdp-overlay.git</source>
+        <source type="git">git@github.com:Serg-VL/xrdp-overlay.git</source>
+        <feed>https://github.com/Serg-VL/xrdp-overlay/commits/master.atom</feed>
+    </repo>
+</repositories>
