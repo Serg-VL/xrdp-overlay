@@ -4,7 +4,7 @@
 
 EAPI=7
 
-inherit autotools eutils #git-r3
+inherit autotools #git-r3
 
 DESCRIPTION="An open source Pulseaudio module for Remote Desktop Protocol server"
 HOMEPAGE="http://www.xrdp.org/"

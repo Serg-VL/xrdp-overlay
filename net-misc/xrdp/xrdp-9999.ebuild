@@ -2,9 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=5
+EAPI=7
 
-inherit autotools eutils pam systemd git-r3
+inherit autotools pam systemd git-r3
 
 DESCRIPTION="An open source Remote Desktop Protocol server"
 HOMEPAGE="http://www.xrdp.org/"
@@ -14,7 +14,7 @@ LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="amd64 x86"
 RESTRICT="mirror"
-IUSE="debug fuse kerberos jpeg -neutrinordp pam +pulseaudio systemd -xrdpvr"
+IUSE="debug fuse +ipv6 kerberos jpeg -neutrinordp pam +pulseaudio systemd +vsock +xorg -xrdpvr"
 
 RDEPEND="dev-libs/openssl:0=
 	media-sound/pulseaudio:0=
@@ -24,12 +24,13 @@ RDEPEND="dev-libs/openssl:0=
 	fuse? ( sys-fs/fuse:0= )
 	jpeg? ( virtual/jpeg:0= )
 	kerberos? ( virtual/krb5:0= )
-	pam? ( virtual/pam:0= )
+	pam? ( sys-libs/pam:0= )
 	neutrinordp? ( net-misc/freerdp:0= )
 	xrdpvr? ( virtual/ffmpeg:0= )"
+#	xorg? ( net-misc/xorgxrdp )"
 DEPEND="${RDEPEND}
 	app-arch/xz-utils
-	net-misc/xorgxrdp:0"
+	dev-lang/nasm:0="
 # RDEPEND="${RDEPEND}
 #     || (
 #         net-misc/tigervnc:0[server,xorgmodule]
@@ -43,7 +44,14 @@ src_prepare() {
 	sed -i -e '/^AllowRootLogin/s/true/false/' sesman/sesman.ini.in || die
 	# explicitly use Xorg - and not a fallback to Xorg.wrap, to allow non-console users
 	sed -i -e '/^param=/s!Xorg!/usr/bin/Xorg!' sesman/sesman.ini.in || die
+	if [ -e '/usr/libexec/Xorg' ]; then
+		sed -i -e '/^param=/s!Xorg!/usr/libexec/Xorg!' sesman/sesman.ini || die
+	else
+		[ -u '/usr/bin/Xorg' ] && ewarn "Can't find an non-suid Xorg binary, xrdp requires this for proper functionality. Please specify path manually in /etc/xrdp/sesman.ini"
+		# sed -i -e '/^param=/s!Xorg!/usr/bin/Xorg!' sesman/sesman.ini || die
+ 	fi
 
+	default
 	eautoreconf
 }
 
@@ -70,12 +78,14 @@ src_configure() {
 		$(use jpeg && has_version 'media-libs/libjpeg-turbo:0' && echo --enable-tjpeg)
 
 		# -- others --
-		$(usex debug --enable-xrdpdebug '')
-		$(usex fuse --enable-fuse '')
-		# $(usex neutrinordp --enable-neutrinordp '')
-		# $(usex xrdpvr --enable-xrdpvr '')
+		$(use_enable debug debug-all)
+		$(use_enable fuse)
+		$(use_enable ipv6)
+		$(use_enable neutrinordp)
+		$(use_enable vsock)
+		$(use_enable xrdpvr)
 
-		"$(systemd_with_unitdir)"
+		--with-systemdsystemunitdir="$(systemd_get_systemunitdir)"
 	)
 
 	econf "${myconf[@]}"
@@ -83,7 +93,7 @@ src_configure() {
 
 src_install() {
 	default
-	prune_libtool_files --all
+	find "${ED}" -name '*.la' -delete || die
 
 	# use our pam.d file since upstream's incompatible with Gentoo
 	use pam && newpamd "${FILESDIR}"/xrdp-sesman.pamd xrdp-sesman

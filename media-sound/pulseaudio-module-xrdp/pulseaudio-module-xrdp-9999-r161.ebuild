@@ -10,7 +10,7 @@ DESCRIPTION="An open source Pulseaudio module for Remote Desktop Protocol server
 HOMEPAGE="http://www.xrdp.org/"
 #EGIT_REPO_URI="https://github.com/neutrinolabs/pulseaudio-module-xrdp.git"
 
-PULSE_VER="12.2"
+PULSE_VER="16.1"
 SRC_URI="
 	https://github.com/neutrinolabs/pulseaudio-module-xrdp/archive/devel.zip -> pulseaudio-module-xrdp-9999.zip
 	https://freedesktop.org/software/pulseaudio/releases/pulseaudio-${PULSE_VER}.tar.xz
@@ -21,6 +21,8 @@ KEYWORDS="amd64 x86"
 RESTRICT="mirror"
 
 BDEPEND="~media-sound/pulseaudio-${PULSE_VER}"
+#	sys-libs/tdb
+#	dev-libs/check"
 RDEPEND="~media-sound/pulseaudio-${PULSE_VER}"
 DEPEND="${RDEPEND}
 	app-arch/xz-utils"
@@ -39,11 +41,14 @@ src_prepare() {
 }
 
 src_configure() {
-	pushd ../pulseaudio-${PULSE_VER}/
-	econf
+	pushd ${WORKDIR}/pulseaudio-${PULSE_VER} || die
+	#econf
+	meson build -Ddoxygen=false -Ddatabase=simple -Dtests=false || die
+	##meson_src_configure
 	popd
 	local myconf=(
 		PULSE_DIR=${WORKDIR}/pulseaudio-${PULSE_VER}
+		PULSE_CONFIG_DIR=${WORKDIR}/pulseaudio-${PULSE_VER}/build
 	)
 	econf "${myconf[@]}"
 }
